@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
             printf("%s\n", buff);
         }
     }
+    printf("exit\n");
     return 0;
 }
 

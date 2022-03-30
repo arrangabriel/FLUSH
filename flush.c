@@ -15,12 +15,20 @@ int main(int argc, char *argv[]) {
     char buff[1024];
     int status;
     generate_prompt(prmpt, sizeof(prmpt));
+
     while ((status = get_line(prmpt, buff, sizeof(buff))) != NO_INPUT)
     {
         if (status == TOO_LONG) {
             printf("Too long\n");
         } else {
-            printf("%s\n", buff);
+            char **args;
+            unsigned int argc;
+            parse_line(buff, strlen(buff), &args, &argc);
+            for (int i = 0; i < argc; i++)
+            {
+                printf("%i, ", i);
+                printf("%s\n", args[i]);
+            }
         }
     }
     printf("exit\n");

@@ -2,7 +2,8 @@
 #include <string.h>
 #include "parsing.h"
 
-int getLine (char *prmpt, char *buff, size_t sz) {
+int get_line(char *prmpt, char *buff, size_t sz)
+{
     int ch, extra;
 
     // Get line with buffer overrun protection.

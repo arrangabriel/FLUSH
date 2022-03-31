@@ -8,6 +8,12 @@
 
 #define MAX_LENGTH 1024
 
+void sig_handler(int signo)
+{
+    // if (signo == SIGINT)
+    //     printf("received SIGINT\n");
+}
+
 void generate_prompt(char *prmpt, size_t sz)
 {
     bzero(prmpt, sz);
@@ -33,7 +39,7 @@ int run_args(char **args, unsigned int argc)
             else
                 execv(args[0], &args[0]);
 
-            printf("Command - %s not found\n", args[0]);
+            // printf("Command - %s not found\n", args[0]);
             exit(EXIT_FAILURE);
         }
         // parent
@@ -58,6 +64,9 @@ int main(int argc, char *argv[])
     int status;
     generate_prompt(prmpt, sizeof(prmpt));
 
+    if (signal(SIGINT, sig_handler) == SIG_ERR)
+        printf("\ncan't catch SIGINT\n");
+
     while ((status = get_line(prmpt, buff, sizeof(buff))) != NO_INPUT)
     {
         if (status == TOO_LONG)
@@ -66,11 +75,15 @@ int main(int argc, char *argv[])
         }
         else
         {
-            char **args = (char **)malloc((strlen(buff) / 2) + 2);
-            unsigned int argc = parse_line(buff, strlen(buff), &args);
-            int status = run_args(args, argc - 1);
-            printf("Exit status [%s] = %i\n", buff, status);
-            free(args);
+            if (strlen(buff) != 0)
+            {
+                char **args = (char **)malloc((strlen(buff) / 2) + 2);
+                unsigned int argc = parse_line(buff, strlen(buff), &args);
+                int found;
+                int status = run_args(args, argc - 1);
+                printf("Exit status [%s] = %i\n", buff, status);
+                free(args);
+            }
         }
     }
     printf("exit\n");

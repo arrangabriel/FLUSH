@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define MAX_LENGTH 1024
 
@@ -21,7 +23,30 @@ int run_args(char **args, unsigned int argc)
     }
     else
     {
-        printf("%s - ran.\n", args[0]);
+        // TODO, search for program in path and return status before forking.
+        pid_t pid = fork();
+        if (!pid)
+        {
+            // child
+            if (!argc)
+                execl(args[0], args[0], NULL);
+            else
+                execv(args[0], &args[0]);
+
+            printf("Command - %s not found\n", args[0]);
+            exit(EXIT_FAILURE);
+        }
+        // parent
+        // TODO - figure out which events to wait on.
+        int status;
+        waitpid(pid, &status, 0);
+
+        if (WIFEXITED(status))
+        {
+            // Child process called exit
+            // Return exit-status of child process
+            return WEXITSTATUS(status);
+        }
     }
     return 0;
 }
@@ -41,9 +66,10 @@ int main(int argc, char *argv[])
         }
         else
         {
-            char **args = (char **)malloc((strlen(buff) / 2) + 1);
+            char **args = (char **)malloc((strlen(buff) / 2) + 2);
             unsigned int argc = parse_line(buff, strlen(buff), &args);
-            run_args(args, argc);
+            int status = run_args(args, argc - 1);
+            printf("Exit status [%s] = %i\n", buff, status);
             free(args);
         }
     }

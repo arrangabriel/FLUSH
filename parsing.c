@@ -43,5 +43,6 @@ unsigned int parse_line(char *line, size_t sz, char ***args)
         (*args)[argc - 1] = token;
         token = strtok(NULL, delim);
     }
+    (*args)[argc] = NULL;
     return argc;
 }

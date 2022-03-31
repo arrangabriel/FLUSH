@@ -16,7 +16,7 @@
  */
 int get_line(char *prmpt, char *buff, size_t sz);
 /**
- * @brief Splits a string by spaces and tabs and places each token into args.
+ * @brief Splits a string by spaces and tabs and places each token into args, NULL-terminated.
  *
  * @param line - String to be split.
  * @param sz - Size of string.

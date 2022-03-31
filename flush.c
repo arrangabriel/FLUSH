@@ -38,9 +38,9 @@ int run_args(char **args, unsigned int argc)
         {
             // child
             if (!argc)
-                execl(args[0], args[0], NULL);
+                execlp(args[0], args[0], NULL);
             else
-                execv(args[0], &args[0]);
+                execvp(args[0], &args[0]);
 
             // printf("Command - %s not found\n", args[0]);
             exit(EXIT_FAILURE);

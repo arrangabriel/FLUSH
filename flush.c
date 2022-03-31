@@ -76,16 +76,16 @@ int main(int argc, char *argv[])
         else
         {
             if (strlen(buff) != 0)
-            {
-                char **args = (char **)malloc((strlen(buff) / 2) + 2);
-                unsigned int argc = parse_line(buff, strlen(buff), &args);
-                int found;
-                int status = run_args(args, argc - 1);
-                printf("Exit status [%s] = %i\n", buff, status);
-                free(args);
-            }
+                continue;
+
+            char **args = (char **)malloc((strlen(buff) / 2) + 2);
+            unsigned int argc = parse_line(buff, strlen(buff), &args);
+            int found;
+            int status = run_args(args, argc - 1);
+            printf("Exit status [%s] = %i\n", buff, status);
+            free(args);
         }
     }
     printf("exit\n");
-    return EXIT_SUCCESS;
+    exit(EXIT_SUCCESS);
 }

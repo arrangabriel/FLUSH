@@ -5,20 +5,29 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <linux/limits.h>
 
 #define MAX_LENGTH 1024
 
-void sig_handler(int signo)
-{
-    // if (signo == SIGINT)
-    //     printf("received SIGINT\n");
-}
+#define RESET "\x1B[0m"
+#define KREDB "\x1B[31;1m"
+#define KGRN "\x1B[32m"
+#define KYEL "\x1B[33m"
+#define KCYNB "\x1B[36;1m"
+#define KBLU "\x1B[34m"
+#define KWHT "\x1B[37m"
+
+void sig_handler(int signo) {}
 
 void generate_prompt(char *prmpt, size_t sz)
 {
     bzero(prmpt, sz);
-    getcwd(prmpt, sz);
-    strcat(prmpt, ": ");
+    char path[PATH_MAX];
+    char end[] = RESET KWHT ": " RESET;
+    getcwd(path, PATH_MAX);
+    strcpy(prmpt, KBLU);
+    strncat(prmpt, path, sz - strlen(end));
+    strcat(prmpt, end);
 }
 
 int run_args(char **args, unsigned int argc)
@@ -28,7 +37,10 @@ int run_args(char **args, unsigned int argc)
         if (!argc)
             chdir(getenv("HOME"));
         else if (chdir(args[1]))
-            printf("'%s' - not a directory\n", args[1]);
+        {
+            printf(KYEL "Not a directory: " RESET KCYNB "%s" RESET "\n", args[1]);
+            return EXIT_FAILURE;
+        }
     }
     else
     {
@@ -86,7 +98,8 @@ int main(int argc, char *argv[])
             int found;
             int status = run_args(args, argc - 1);
             generate_prompt(prmpt, sizeof(prmpt));
-            printf("Exit status [");
+            char *status_color = (status) ? RESET KREDB : RESET KGRN;
+            printf(RESET KYEL "Exit status " RESET KCYNB "[");
             for (int i = 0; i < argc; i++)
             {
                 printf("%s", args[i]);
@@ -95,10 +108,10 @@ int main(int argc, char *argv[])
                     printf(" ");
                 }
             }
-            printf("] = %i\n", status);
+            printf("]%s = %i\n" RESET, status_color, status);
             free(args);
         }
     }
-    printf("exit\n");
+    printf(RESET KGRN "exit" RESET "\n");
     exit(EXIT_SUCCESS);
 }

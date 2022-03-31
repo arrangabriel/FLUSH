@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include "parsing.h"
 
+// TODO - this whole function can be replaced by a call to getline (from stdio)
 int get_line(char *prmpt, char *buff, size_t sz)
 {
     int ch, extra;

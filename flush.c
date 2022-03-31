@@ -25,7 +25,10 @@ int run_args(char **args, unsigned int argc)
 {
     if (strcmp(args[0], "cd") == 0)
     {
-        printf("CD - ran.\n");
+        if (!argc)
+            chdir(getenv("HOME"));
+        else if (chdir(args[1]))
+            printf("'%s' - not a directory\n", args[1]);
     }
     else
     {
@@ -54,7 +57,7 @@ int run_args(char **args, unsigned int argc)
             return WEXITSTATUS(status);
         }
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int main(int argc, char *argv[])
@@ -75,14 +78,24 @@ int main(int argc, char *argv[])
         }
         else
         {
-            if (strlen(buff) != 0)
+            if (strlen(buff) == 0)
                 continue;
 
             char **args = (char **)malloc((strlen(buff) / 2) + 2);
             unsigned int argc = parse_line(buff, strlen(buff), &args);
             int found;
             int status = run_args(args, argc - 1);
-            printf("Exit status [%s] = %i\n", buff, status);
+            generate_prompt(prmpt, sizeof(prmpt));
+            printf("Exit status [");
+            for (int i = 0; i < argc; i++)
+            {
+                printf("%s", args[i]);
+                if (i != argc - 1)
+                {
+                    printf(" ");
+                }
+            }
+            printf("] = %i\n", status);
             free(args);
         }
     }

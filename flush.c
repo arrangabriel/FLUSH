@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <linux/limits.h>
+#include <limits.h>
 
 #define MAX_LENGTH 1024
 

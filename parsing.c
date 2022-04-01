@@ -32,9 +32,8 @@ int get_line(char *prmpt, char *buff, size_t sz)
     return OK;
 }
 
-unsigned int parse_line(char *line, size_t sz, char ***args)
+unsigned int parse_line(char *line, size_t sz, char ***args, const char delim[])
 {
-    char delim[] = " \t";
     char *token;
     unsigned int argc = 0;
     token = strtok(line, delim);

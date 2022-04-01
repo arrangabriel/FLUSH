@@ -23,6 +23,6 @@ int get_line(char *prmpt, char *buff, size_t sz);
  * @param args - Reference to string array to be modified.
  * @return The number of elements in args.
  */
-unsigned int parse_line(char *line, size_t sz, char ***args);
+unsigned int parse_line(char *line, size_t sz, char ***args, const char delim[]);
 
 #endif

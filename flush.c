@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
                 continue;
 
             char **args = (char **)malloc((strlen(buff) / 2) + 2);
-            unsigned int argc = parse_line(buff, strlen(buff), &args);
+            unsigned int argc = parse_line(buff, strlen(buff), &args, " \t");
             int found;
             int status = run_args(args, argc - 1);
             generate_prompt(prmpt, sizeof(prmpt));

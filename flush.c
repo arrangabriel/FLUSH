@@ -85,31 +85,30 @@ int main(int argc, char *argv[])
     while ((status = get_line(prmpt, buff, sizeof(buff))) != NO_INPUT)
     {
         if (status == TOO_LONG)
-        {
             printf("Too long\n");
-        }
         else
         {
             if (strlen(buff) == 0)
                 continue;
 
-            char **args = (char **)malloc((strlen(buff) / 2) + 2);
-            unsigned int argc = parse_line(buff, strlen(buff), &args, " \t");
-            int found;
-            int status = run_args(args, argc - 1);
+            char **commands = (char **)malloc((strlen(buff) / 2) + 2);
+
+            unsigned int commandc = parse_line(buff, strlen(buff), &commands, " \t");
+            int status = run_args(commands, commandc - 1);
             generate_prompt(prmpt, sizeof(prmpt));
+
             char *status_color = (status) ? RESET KREDB : RESET KGRN;
             printf(RESET KYEL "Exit status " RESET KCYNB "[");
-            for (int i = 0; i < argc; i++)
+            for (int i = 0; i < commandc; i++)
             {
-                printf("%s", args[i]);
+                printf("%s", commands[i]);
                 if (i != argc - 1)
                 {
                     printf(" ");
                 }
             }
             printf("]%s = %i\n" RESET, status_color, status);
-            free(args);
+            free(commands);
         }
     }
     printf(RESET KGRN "exit" RESET "\n");

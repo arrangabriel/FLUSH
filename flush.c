@@ -50,22 +50,18 @@ int run_args(char **args, unsigned int argc)
         if (!pid)
         {
             // child
-            if (!argc)
-                execlp(args[0], args[0], NULL);
-            else {
-                //TODO refactor this bigtime
-                //Like yikes this is bad
-                if (strcmp(args[argc-1], ">") == 0) {
-                        char* targ = args[argc];
-                        args[argc-1] = NULL;
-                        int fd = open(targ, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-                        dup2(fd, 1);
-                        execvp(args[0], &args[0]);
-                }
+            // TODO refactor this bigtime
+            // Like yikes this is bad
+            if (argc && strcmp(args[argc - 1], ">") == 0)
+            {
+                char *targ = args[argc];
+                args[argc - 1] = NULL;
+                int fd = open(targ, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+                dup2(fd, 1);
                 execvp(args[0], &args[0]);
             }
+            execvp(args[0], &args[0]);
 
-            // printf("Command - %s not found\n", args[0]);
             exit(EXIT_FAILURE);
         }
         // parent

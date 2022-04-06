@@ -1,4 +1,5 @@
 #include "parsing.h"
+#include "command.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,6 +10,7 @@
 #include <fcntl.h>
 
 #define MAX_LENGTH 1024
+#define TEMP "/tmp/flush_out"
 
 #define RESET "\x1B[0m"
 #define KREDB "\x1B[31;1m"
@@ -19,6 +21,36 @@
 #define KWHT "\x1B[37m"
 
 void sig_handler(int signo) {}
+
+int flush_cd(char **args, unsigned int argc);
+
+char *builtin_str[] = {
+    "cd"
+    //"help",
+    //"exit",
+};
+
+int (*builtin_func[])(char **, unsigned int) = {
+    &flush_cd
+    //&flush_exit,
+};
+
+size_t flush_num_builtins()
+{
+    return sizeof(builtin_str) / sizeof(char *);
+}
+
+int flush_cd(char **args, unsigned int argc)
+{
+    if (argc == 1)
+        chdir(getenv("HOME"));
+    else if (chdir(args[1]))
+    {
+        printf(KYEL "Not a directory: " RESET KCYNB "%s" RESET "\n", args[1]);
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
 
 void generate_prompt(char *prmpt, size_t sz)
 {
@@ -79,6 +111,102 @@ int run_args(char **args, unsigned int argc)
     return EXIT_SUCCESS;
 }
 
+int run_command(Command *runcommand, Command *outcommand)
+{
+    for (int i = 0; i < flush_num_builtins(); i++)
+    {
+        if (strcmp((runcommand->args)[0], builtin_str[i]) == 0)
+            return (*builtin_func[i])(runcommand->args, runcommand->argc);
+    }
+
+    int tmp_fd;
+    if (runcommand->outc != 0)
+    {
+        if ((tmp_fd = open(TEMP, O_RDWR | O_CREAT, S_IRWXU)) < 0)
+        {
+            printf("Could not create tempfile\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    FILE *out_files[runcommand->outc];
+
+    for (int i = 0; i < runcommand->outc; i++)
+    {
+        FILE *out_file;
+        for (int j = 0; j < runcommand->outc; j++)
+        {
+            printf("%s\n", (runcommand->output_redirects)[j]);
+        }
+        out_file = fopen((runcommand->output_redirects)[i], "w+");
+        printf("%i\n", fileno(out_file));
+        // Could not create? stl
+        out_files[i] = out_file;
+    }
+
+    int pid = fork();
+
+    if (pid)
+    {
+
+        int status;
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status))
+        {
+            if (runcommand->outc != 0)
+            {
+                char c;
+                FILE *tmp_file = fopen(TEMP, "r");
+                while ((c = fgetc(tmp_file)) != EOF)
+                {
+                    for (int i = 0; i < runcommand->outc; i++)
+                    {
+                        fputc(c, out_files[i]);
+                    }
+                }
+                for (int i = 0; i < runcommand->outc; i++)
+                {
+                    fclose(out_files[i]);
+                }
+                fclose(tmp_file);
+            }
+
+            return WEXITSTATUS(status);
+        }
+
+        printf("Process return status %i\n", status);
+        return EXIT_FAILURE;
+    }
+
+    // In child
+    if (strcmp(runcommand->input_redirect, "") != 0)
+    {
+        int fd;
+        if ((fd = open(runcommand->input_redirect, O_RDONLY)) < 0)
+        {
+            // Not exhaustive error handling
+            printf("Input tile not found\n");
+            exit(EXIT_FAILURE);
+        }
+
+        dup2(fd, 0);
+    }
+
+    if ((runcommand->outc) != 0)
+    {
+        dup2(tmp_fd, 1);
+    }
+
+    if (outcommand == NULL)
+    {
+    }
+    else
+    {
+    }
+
+    execvp((runcommand->args)[0], &(runcommand->args)[0]);
+}
+
 int main(int argc, char *argv[])
 {
     char prmpt[MAX_LENGTH];
@@ -98,24 +226,37 @@ int main(int argc, char *argv[])
             if (strlen(buff) == 0)
                 continue;
 
-            char **commands = (char **)malloc((strlen(buff) / 2) + 2);
+            Command *commands[(strlen(buff) + 1)];
+            bzero(commands, sizeof(commands)); // = (Command **)malloc((strlen(buff) + 1) * sizeof(Command *));
+            unsigned int commandc = 0;
 
-            unsigned int commandc = parse_line(buff, strlen(buff), &commands, " \t");
-            int status = run_args(commands, commandc - 1);
-            generate_prompt(prmpt, sizeof(prmpt));
+            status = parse_line(buff, commands, &commandc);
 
-            char *status_color = (status) ? RESET KREDB : RESET KGRN;
-            printf(RESET KYEL "Exit status " RESET KCYNB "[");
             for (int i = 0; i < commandc; i++)
             {
-                printf("%s", commands[i]);
-                if (i != argc - 1)
-                {
-                    printf(" ");
-                }
+                if (i < (commandc - 1))
+                    status = run_command(commands[i], commands[i + 1]);
+                else
+                    status = run_command(commands[i], NULL);
             }
-            printf("]%s = %i\n" RESET, status_color, status);
-            free(commands);
+
+            generate_prompt(prmpt, sizeof(prmpt));
+
+            // char *status_color = (status) ? RESET KREDB : RESET KGRN;
+            // printf(RESET KYEL "Exit status " RESET KCYNB "[");
+            // for (int i = 0; i < commandc; i++)
+            // {
+            //     printf("%s", commands[i]);
+            //     if (i != argc - 1)
+            //     {
+            //         printf(" ");
+            //     }
+            // }
+            // printf("]%s = %i\n" RESET, status_color, status);
+            for (int i = 0; i < commandc; i++)
+            {
+                command_del(commands[i]);
+            }
         }
     }
     printf(RESET KGRN "exit" RESET "\n");

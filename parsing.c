@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "parsing.h"
+#include "command.h"
 
 int get_line(char *prmpt, char *buff, size_t sz)
 {
@@ -54,7 +55,7 @@ int parse_command(char *command_str, Command *command)
     char **space_sep = (char **)malloc((strlen(command_str) / 2) + 1);
 
     int i = 0;
-    while ((arg = strsep(command_str, " \t")) != NULL)
+    while ((arg = strsep(&command_str, " \t")) != NULL)
     {
         space_sep[i] = arg;
         i++;
@@ -69,6 +70,7 @@ int parse_command(char *command_str, Command *command)
         else if (strcmp(space_sep[j], ">") == 0)
         {
             command->output_redirects[(command->outc)++] = space_sep[++j];
+            //printf("%s\n", space_sep[j]);
         }
         else if (strcmp(space_sep[j], "&") == 0)
         {
@@ -77,20 +79,22 @@ int parse_command(char *command_str, Command *command)
 
             command->bg = 1;
         }
+        else
         {
             command->args[(command->argc)++] = space_sep[j];
         }
     }
 }
 
-int parse_line(char *line, Command *commands[])
+int parse_line(char *line, Command *commands[], int *commandc)
 {
     char *command_str;
-    int i = 0;
-    while ((command_str = strsep(line, "|")) != NULL)
+    (*commandc) = 0;
+    while ((command_str = strsep(&line, "|")) != NULL)
     {
-        Command *command = command_init(strlen(line));
+        // printf("%s\n", line);
+        Command *command = command_init(strlen(command_str));
         parse_command(command_str, command);
-        commands[i++] = command;
+        commands[(*commandc)++] = command;
     }
 }

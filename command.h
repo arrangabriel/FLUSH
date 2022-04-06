@@ -2,6 +2,7 @@
 #define __COMMAND__H__
 
 #include <sys/types.h>
+#include <stdlib.h>
 
 typedef struct Command
 {

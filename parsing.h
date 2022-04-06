@@ -22,6 +22,6 @@ int get_line(char *prmpt, char *buff, size_t sz);
 
 int parse_command(char *command_str, Command *command);
 
-int parse_line(char *line, Command *commands[]);
+int parse_line(char *line, Command *commands[], int* commandc);
 
 #endif

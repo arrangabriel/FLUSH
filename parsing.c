@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "parsing.h"
@@ -32,7 +33,7 @@ int get_line(char *prmpt, char *buff, size_t sz)
     return OK;
 }
 
-unsigned int parse_line(char *line, size_t sz, char ***args, const char delim[])
+unsigned int parse(char *line, size_t sz, char ***args, const char delim[])
 {
     char *token;
     unsigned int argc = 0;
@@ -45,4 +46,34 @@ unsigned int parse_line(char *line, size_t sz, char ***args, const char delim[])
     }
     (*args)[argc] = NULL;
     return argc;
+}
+
+Command *command_init()
+{
+    Command *cmd = (Command *)malloc(sizeof(Command));
+    // Error handling?
+    cmd->argc = 0;
+    cmd->pid = 0;
+    return cmd;
+}
+
+int command_del(Command *cmd)
+{
+    free(cmd);
+    // Error handling?
+    return 0;
+}
+
+int parse_command(char *command_str, Command *command)
+{
+    char *token;
+}
+
+int parse_line(char *line, size_t sz, Command *commands[])
+{
+    char *command_str;
+    while ((command_str = strsep(line, "|")) == NULL)
+    {
+        Command *command = command_init();
+    }
 }

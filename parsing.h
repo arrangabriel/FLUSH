@@ -2,6 +2,7 @@
 #define ____PARSING___H___
 
 #include <stddef.h>
+#include <sys/types.h>
 
 #define OK 0
 #define NO_INPUT 1
@@ -23,6 +24,21 @@ int get_line(char *prmpt, char *buff, size_t sz);
  * @param args - Reference to string array to be modified.
  * @return The number of elements in args.
  */
-unsigned int parse_line(char *line, size_t sz, char ***args, const char delim[]);
+unsigned int parse(char *line, size_t sz, char ***args, const char delim[]);
+
+int parse_command(char *command_str, Command *command);
+
+typedef struct Command
+{
+    char **args;
+    unsigned int argc;
+    int *input_redirects;
+    int *output_redirects;
+    pid_t pid;
+} Command;
+
+Command* command_init();
+
+int command_del(Command *cmd);
 
 #endif

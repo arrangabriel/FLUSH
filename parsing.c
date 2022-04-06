@@ -4,7 +4,6 @@
 #include <ctype.h>
 #include "parsing.h"
 
-// TODO - this whole function can be replaced by a call to getline (from stdio)
 int get_line(char *prmpt, char *buff, size_t sz)
 {
     int ch, extra;
@@ -33,47 +32,65 @@ int get_line(char *prmpt, char *buff, size_t sz)
     return OK;
 }
 
-unsigned int parse(char *line, size_t sz, char ***args, const char delim[])
-{
-    char *token;
-    unsigned int argc = 0;
-    token = strtok(line, delim);
-    while (token != NULL)
-    {
-        argc++;
-        (*args)[argc - 1] = token;
-        token = strtok(NULL, delim);
-    }
-    (*args)[argc] = NULL;
-    return argc;
-}
+// unsigned int parse(char *line, size_t sz, char ***args, const char delim[])
+// {
+//     char *token;
+//     unsigned int argc = 0;
+//     token = strtok(line, delim);
+//     while (token != NULL)
+//     {
+//         argc++;
+//         (*args)[argc - 1] = token;
+//         token = strtok(NULL, delim);
+//     }
+//     (*args)[argc] = NULL;
+//     return argc;
+// }
 
-Command *command_init()
-{
-    Command *cmd = (Command *)malloc(sizeof(Command));
-    // Error handling?
-    cmd->argc = 0;
-    cmd->pid = 0;
-    return cmd;
-}
-
-int command_del(Command *cmd)
-{
-    free(cmd);
-    // Error handling?
-    return 0;
-}
 
 int parse_command(char *command_str, Command *command)
 {
-    char *token;
+    char *arg;
+    char **space_sep = (char **)malloc((strlen(command_str) / 2) + 1);
+
+    int i = 0;
+    while ((arg = strsep(command_str, " \t")) != NULL)
+    {
+        space_sep[i] = arg;
+        i++;
+    }
+
+    for (int j = 0; j < i; j++)
+    {
+        if (strcmp(space_sep[j], "<") == 0)
+        {
+            command->input_redirect = space_sep[++j];
+        }
+        else if (strcmp(space_sep[j], ">") == 0)
+        {
+            command->output_redirects[(command->outc)++] = space_sep[++j];
+        }
+        else if (strcmp(space_sep[j], "&") == 0)
+        {
+            if (j != (i - 1))
+                return -1;
+
+            command->bg = 1;
+        }
+        {
+            command->args[(command->argc)++] = space_sep[j];
+        }
+    }
 }
 
-int parse_line(char *line, size_t sz, Command *commands[])
+int parse_line(char *line, Command *commands[])
 {
     char *command_str;
-    while ((command_str = strsep(line, "|")) == NULL)
+    int i = 0;
+    while ((command_str = strsep(line, "|")) != NULL)
     {
-        Command *command = command_init();
+        Command *command = command_init(strlen(line));
+        parse_command(command_str, command);
+        commands[i++] = command;
     }
 }

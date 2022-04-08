@@ -3,11 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <limits.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #define MAX_LENGTH 1024
 #define TEMP "/tmp/flush_out"

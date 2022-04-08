@@ -73,7 +73,7 @@ int parse_command(char *command_str, Command *command)
     command->args[(command->argc) + 1] = NULL;
 }
 
-int parse_line(char *line, Command *commands[], int *commandc)
+int parse_line(char *line, Command *commands[], unsigned int *commandc)
 {
     char *command_str;
     (*commandc) = 0;
@@ -83,4 +83,5 @@ int parse_line(char *line, Command *commands[], int *commandc)
         parse_command(command_str, command);
         commands[(*commandc)++] = command;
     }
+    return 0;
 }

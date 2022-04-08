@@ -33,26 +33,13 @@ int get_line(char *prmpt, char *buff, size_t sz)
     return OK;
 }
 
-// unsigned int parse(char *line, size_t sz, char ***args, const char delim[])
-// {
-//     char *token;
-//     unsigned int argc = 0;
-//     token = strtok(line, delim);
-//     while (token != NULL)
-//     {
-//         argc++;
-//         (*args)[argc - 1] = token;
-//         token = strtok(NULL, delim);
-//     }
-//     (*args)[argc] = NULL;
-//     return argc;
-// }
-
-
 int parse_command(char *command_str, Command *command)
 {
     char *arg;
-    char **space_sep = (char **)malloc((strlen(command_str) / 2) + 1);
+    // This change may be wrong, but I dont think so
+    // char **space_sep = (char **)malloc(((strlen(command_str) / 2) + 1));
+    // okay, this fixed it, wtf
+    char **space_sep = (char **)malloc(((strlen(command_str) / 2) + 1) * sizeof(char *));
 
     int i = 0;
     while ((arg = strsep(&command_str, " \t")) != NULL)
@@ -70,7 +57,6 @@ int parse_command(char *command_str, Command *command)
         else if (strcmp(space_sep[j], ">") == 0)
         {
             command->output_redirects[(command->outc)++] = space_sep[++j];
-            //printf("%s\n", space_sep[j]);
         }
         else if (strcmp(space_sep[j], "&") == 0)
         {
@@ -84,6 +70,7 @@ int parse_command(char *command_str, Command *command)
             command->args[(command->argc)++] = space_sep[j];
         }
     }
+    command->args[(command->argc) + 1] = NULL;
 }
 
 int parse_line(char *line, Command *commands[], int *commandc)
@@ -92,7 +79,6 @@ int parse_line(char *line, Command *commands[], int *commandc)
     (*commandc) = 0;
     while ((command_str = strsep(&line, "|")) != NULL)
     {
-        // printf("%s\n", line);
         Command *command = command_init(strlen(command_str));
         parse_command(command_str, command);
         commands[(*commandc)++] = command;

@@ -6,6 +6,7 @@
 
 typedef struct Command
 {
+    // TODO - add field for original string, we lose position of redirects as is
     char **args;
     unsigned int argc;
     char *input_redirect;

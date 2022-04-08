@@ -134,13 +134,8 @@ int run_command(Command *runcommand, Command *outcommand)
     for (int i = 0; i < runcommand->outc; i++)
     {
         FILE *out_file;
-        for (int j = 0; j < runcommand->outc; j++)
-        {
-            printf("%s\n", (runcommand->output_redirects)[j]);
-        }
         out_file = fopen((runcommand->output_redirects)[i], "w+");
-        printf("%i\n", fileno(out_file));
-        // Could not create? stl
+        //  Could not create? stl
         out_files[i] = out_file;
     }
 
@@ -148,7 +143,6 @@ int run_command(Command *runcommand, Command *outcommand)
 
     if (pid)
     {
-
         int status;
         waitpid(pid, &status, 0);
         if (WIFEXITED(status))
@@ -160,15 +154,13 @@ int run_command(Command *runcommand, Command *outcommand)
                 while ((c = fgetc(tmp_file)) != EOF)
                 {
                     for (int i = 0; i < runcommand->outc; i++)
-                    {
                         fputc(c, out_files[i]);
-                    }
                 }
                 for (int i = 0; i < runcommand->outc; i++)
-                {
                     fclose(out_files[i]);
-                }
+
                 fclose(tmp_file);
+                remove(TEMP);
             }
 
             return WEXITSTATUS(status);
@@ -185,18 +177,16 @@ int run_command(Command *runcommand, Command *outcommand)
         if ((fd = open(runcommand->input_redirect, O_RDONLY)) < 0)
         {
             // Not exhaustive error handling
-            printf("Input tile not found\n");
+            printf("Input file not found\n");
             exit(EXIT_FAILURE);
         }
-
         dup2(fd, 0);
     }
 
     if ((runcommand->outc) != 0)
-    {
         dup2(tmp_fd, 1);
-    }
 
+    // piping setup
     if (outcommand == NULL)
     {
     }
@@ -205,6 +195,10 @@ int run_command(Command *runcommand, Command *outcommand)
     }
 
     execvp((runcommand->args)[0], &(runcommand->args)[0]);
+
+    // TODO - handle launch failure gracefully
+    perror("Error with program execution\n");
+    exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -242,21 +236,21 @@ int main(int argc, char *argv[])
 
             generate_prompt(prmpt, sizeof(prmpt));
 
-            // char *status_color = (status) ? RESET KREDB : RESET KGRN;
-            // printf(RESET KYEL "Exit status " RESET KCYNB "[");
-            // for (int i = 0; i < commandc; i++)
-            // {
-            //     printf("%s", commands[i]);
-            //     if (i != argc - 1)
-            //     {
-            //         printf(" ");
-            //     }
-            // }
-            // printf("]%s = %i\n" RESET, status_color, status);
+            char *status_color = (status) ? RESET KREDB : RESET KGRN;
+            printf(RESET KYEL "Exit status " RESET KCYNB "[");
             for (int i = 0; i < commandc; i++)
             {
-                command_del(commands[i]);
+                Command command = *(commands[i]);
+                for (int j = 0; j < command.argc; j++)
+                {
+                    printf("%s", command.args[j]);
+                    if (j != command.argc - 1)
+                        printf(" ");
+                }
             }
+            printf("]%s = %i\n" RESET, status_color, status);
+            for (int i = 0; i < commandc; i++)
+                command_del(commands[i]);
         }
     }
     printf(RESET KGRN "exit" RESET "\n");

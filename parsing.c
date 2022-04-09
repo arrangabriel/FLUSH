@@ -36,16 +36,19 @@ int get_line(char *prmpt, char *buff, size_t sz)
 int parse_command(char *command_str, Command *command)
 {
     char *arg;
-    // This change may be wrong, but I dont think so
-    // char **space_sep = (char **)malloc(((strlen(command_str) / 2) + 1));
-    // okay, this fixed it, wtf
     char **space_sep = (char **)malloc(((strlen(command_str) / 2) + 1) * sizeof(char *));
 
+    (command->cmd_str) = (char *)malloc(strlen(command_str) * sizeof(char));
+    strcpy(command->cmd_str, command_str);
+    
     int i = 0;
     while ((arg = strsep(&command_str, " \t")) != NULL)
     {
-        space_sep[i] = arg;
-        i++;
+        if (strcmp(arg, "") != 0)
+        {
+            space_sep[i] = arg;
+            i++;
+        }
     }
 
     for (int j = 0; j < i; j++)
@@ -56,7 +59,7 @@ int parse_command(char *command_str, Command *command)
         }
         else if (strcmp(space_sep[j], ">") == 0)
         {
-            command->output_redirects[(command->outc)++] = space_sep[++j];
+            command->output_redirect = space_sep[++j];
         }
         else if (strcmp(space_sep[j], "&") == 0)
         {

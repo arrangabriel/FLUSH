@@ -6,12 +6,11 @@
 
 typedef struct Command
 {
-    // TODO - add field for original string, we lose position of redirects as is
+    char *cmd_str;
     char **args;
     unsigned int argc;
     char *input_redirect;
-    char **output_redirects;
-    unsigned int outc;
+    char *output_redirect;
     int bg;
     pid_t pid;
 } Command;

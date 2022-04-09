@@ -14,7 +14,7 @@
 #include <signal.h>
 #include <errno.h>
 
-#define MAX_LENGTH 1024
+#define MAX_CMD_LEN 1024
 #define TEMP "/tmp/flush_out"
 
 #define RESET "\x1B[0m"
@@ -30,16 +30,17 @@ extern int errno;
 void sig_handler(int signo) {}
 
 int flush_cd(char **args, unsigned int argc);
+int flush_exit(char **args, unsigned int argc);
 
 char *builtin_str[] = {
-    "cd"
+    "cd",
+    "exit",
     //"help",
-    //"exit",
 };
 
 int (*builtin_func[])(char **, unsigned int) = {
-    &flush_cd
-    //&flush_exit,
+    &flush_cd,
+    &flush_exit,
 };
 
 size_t flush_num_builtins()
@@ -57,6 +58,11 @@ int flush_cd(char **args, unsigned int argc)
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
+}
+
+int flush_exit(char **args, unsigned int argc)
+{
+    exit(EXIT_SUCCESS);
 }
 
 void generate_prompt(char *prmpt, size_t sz)
@@ -146,8 +152,8 @@ int run_command(Command *runcommand, Command *outcommand)
 
 int main(int argc, char *argv[])
 {
-    char prmpt[MAX_LENGTH];
-    char buff[MAX_LENGTH];
+    char prmpt[MAX_CMD_LEN];
+    char buff[MAX_CMD_LEN];
     int status;
     generate_prompt(prmpt, sizeof(prmpt));
 

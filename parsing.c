@@ -35,12 +35,13 @@ int get_line(char *prmpt, char *buff, size_t sz)
 
 int parse_command(char *command_str, Command *command)
 {
+    // TODO - investigate bug when parsing with spaces in quotes
     char *arg;
     char **space_sep = (char **)malloc(((strlen(command_str) / 2) + 1) * sizeof(char *));
 
     (command->cmd_str) = (char *)malloc(strlen(command_str) * sizeof(char));
     strcpy(command->cmd_str, command_str);
-    
+
     int i = 0;
     while ((arg = strsep(&command_str, " \t")) != NULL)
     {
@@ -54,24 +55,17 @@ int parse_command(char *command_str, Command *command)
     for (int j = 0; j < i; j++)
     {
         if (strcmp(space_sep[j], "<") == 0)
-        {
             command->input_redirect = space_sep[++j];
-        }
         else if (strcmp(space_sep[j], ">") == 0)
-        {
             command->output_redirect = space_sep[++j];
-        }
         else if (strcmp(space_sep[j], "&") == 0)
         {
             if (j != (i - 1))
                 return -1;
-
             command->bg = 1;
         }
         else
-        {
             command->args[(command->argc)++] = space_sep[j];
-        }
     }
     command->args[(command->argc) + 1] = NULL;
 }

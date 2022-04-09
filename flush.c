@@ -88,13 +88,38 @@ int run_command(Command *runcommand, Command *outcommand)
 
     if (pid)
     {
+        runcommand->pid = pid;
         int status;
-        waitpid(pid, &status, 0);
-        if (WIFEXITED(status))
-            return WEXITSTATUS(status);
 
-        printf("Process return status %i\n", status);
-        return EXIT_FAILURE;
+        if (runcommand->bg)
+        {
+            printf(KGRN "Running in background: " RESET KCYNB "%s" RESET "\n", runcommand->cmd_str);
+            // waitpid(pid, &status, WNOHANG);
+            return EXIT_SUCCESS;
+        }
+        else
+        {
+            waitpid(pid, &status, 0);
+            if (WIFEXITED(status))
+            {
+                if (WEXITSTATUS(status) == EXIT_SUCCESS)
+                    printf(KGRN "Success: " RESET KCYNB "%s" RESET "\n", runcommand->cmd_str);
+                else
+                    printf(KREDB "Failure: " RESET KCYNB "%s" RESET "\n", runcommand->cmd_str);
+            }
+            else if (WIFSIGNALED(status))
+            {
+                printf(KREDB "Killed by signal: " RESET KCYNB "%s" RESET "\n", runcommand->cmd_str);
+            }
+            return WEXITSTATUS(status);
+        }
+
+        // waitpid(pid, &status, 0);
+        // if (WIFEXITED(status))
+        //     return WEXITSTATUS(status);
+
+        // printf("Process return status %i\n", status);
+        // return EXIT_FAILURE;
     }
 
     int std_out = dup(1);
@@ -190,8 +215,10 @@ int main(int argc, char *argv[])
             for (int i = 0; i < commandc; i++)
                 printf("%s", commands[i]->cmd_str);
             printf("]%s = %i\n" RESET, status_color, status);
-            for (int i = 0; i < commandc; i++)
+
+            for (int i = 0; i < commandc; i++) {
                 command_del(commands[i]);
+            }
         }
     }
     printf(RESET KGRN "exit" RESET "\n");

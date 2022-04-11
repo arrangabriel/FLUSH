@@ -55,19 +55,28 @@ int parse_command(char *command_str, Command *command)
     for (int j = 0; j < i; j++)
     {
         if (strcmp(space_sep[j], "<") == 0)
+        {
+            if (j == i)
+                return EXIT_FAILURE;
             command->input_redirect = space_sep[++j];
+        }
         else if (strcmp(space_sep[j], ">") == 0)
+        {
+            if (j == i)
+                return EXIT_FAILURE;
             command->output_redirect = space_sep[++j];
+        }
         else if (strcmp(space_sep[j], "&") == 0)
         {
             if (j != (i - 1))
-                return -1;
+                return EXIT_FAILURE;
             command->bg = 1;
         }
         else
             command->args[(command->argc)++] = space_sep[j];
     }
     command->args[(command->argc) + 1] = NULL;
+    return EXIT_SUCCESS;
 }
 
 int parse_line(char *line, Command *commands[], unsigned int *commandc)
@@ -77,8 +86,14 @@ int parse_line(char *line, Command *commands[], unsigned int *commandc)
     while ((command_str = strsep(&line, "|")) != NULL)
     {
         Command *command = command_init(strlen(command_str));
-        parse_command(command_str, command);
+        if (parse_command(command_str, command))
+        {
+            // delete commands, then return failiure
+            for (int i = 0; i < (*commandc); i++)
+                command_del(commands[i]);
+            return EXIT_FAILURE;
+        }
         commands[(*commandc)++] = command;
     }
-    return 0;
+    return EXIT_SUCCESS;
 }

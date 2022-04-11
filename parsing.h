@@ -18,10 +18,23 @@
  */
 int get_line(char *prmpt, char *buff, size_t sz);
 
-//unsigned int parse(char *line, size_t sz, char ***args, const char delim[]);
-
+/**
+ * @brief Parse a command string into a Command struct
+ * 
+ * @param command_str - Command string to parse
+ * @param command - Command struct to populate
+ * @return Status
+ */
 int parse_command(char *command_str, Command *command);
 
+/**
+ * @brief parse a string into command structs
+ * 
+ * @param line - string to parse
+ * @param commands - array of commands to populate
+ * @param commandc - number of populated commands
+ * @return int - status
+ */
 int parse_line(char *line, Command *commands[], unsigned int* commandc);
 
 #endif

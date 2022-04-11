@@ -33,7 +33,7 @@ int get_line(char *prmpt, char *buff, size_t sz)
     return OK;
 }
 
-int parse_command(char *command_str, Command *command)
+int parse_command(char *command_str, Command *command, int bg)
 {
     // TODO - investigate bug when parsing with spaces in quotes
     char *arg;
@@ -41,6 +41,7 @@ int parse_command(char *command_str, Command *command)
 
     (command->cmd_str) = (char *)malloc(strlen(command_str) * sizeof(char));
     strcpy(command->cmd_str, command_str);
+    command->bg = bg;
 
     int i = 0;
     while ((arg = strsep(&command_str, " \t")) != NULL)
@@ -66,12 +67,6 @@ int parse_command(char *command_str, Command *command)
                 return EXIT_FAILURE;
             command->output_redirect = space_sep[++j];
         }
-        else if (strcmp(space_sep[j], "&") == 0)
-        {
-            if (j != (i - 1))
-                return EXIT_FAILURE;
-            command->bg = 1;
-        }
         else
             command->args[(command->argc)++] = space_sep[j];
     }
@@ -79,14 +74,26 @@ int parse_command(char *command_str, Command *command)
     return EXIT_SUCCESS;
 }
 
-int parse_line(char *line, Command *commands[], unsigned int *commandc)
+int parse_line(char *line, Command *commands[], unsigned int *commandc, int *bg)
 {
     char *command_str;
     (*commandc) = 0;
+    size_t line_len = strlen(line);
+
+    if (strcmp(&line[line_len - 1], "&") == 0)
+    {
+        line[line_len - 2] = '\0';
+        line_len -= 2;
+        (*bg) = 1;
+    }
+    else
+        (*bg) = 0;
+
+    // fix segfault on single command with pipe, or single pipe only
     while ((command_str = strsep(&line, "|")) != NULL)
     {
         Command *command = command_init(strlen(command_str));
-        if (parse_command(command_str, command))
+        if (parse_command(command_str, command, *bg))
         {
             // delete commands, then return failiure
             for (int i = 0; i < (*commandc); i++)

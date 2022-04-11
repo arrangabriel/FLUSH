@@ -17,12 +17,18 @@ typedef struct List
     Node *tail;
 } List;
 
-List *List_create();
+List *list_init();
 
-int List_del(List *list);
+/**
+ * @brief delete list, !warning! frees commands
+ * 
+ * @param list - list to delete
+ * @return int - status
+ */
+int list_del(List *list);
 
-List *List_push(List *list, Command *cmd);
+List *list_push(List *list, Command *cmd);
 
-List *List_remove(List *list, Command *cmd);
+List *list_remove(List *list, Command *cmd);
 
 #endif

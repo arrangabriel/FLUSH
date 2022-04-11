@@ -79,7 +79,14 @@ void generate_prompt(char *prmpt, size_t sz)
     strcat(prmpt, end);
 }
 
-int run_command(Command *runcommand, Command *outcommand)
+/**
+ * @brief runs a command structure
+ *
+ * @param runcommand the command to run
+ * @param outcommand the command to run if the command is a pipe
+ * @return int EXIT_SUCCESS on success, EXIT_FAILURE on failure, -1 if command was backgrounded
+ */
+int run_command(Command *runcommand, Command *outcommand, int bg)
 {
     for (int i = 0; i < flush_num_builtins(); i++)
     {
@@ -96,10 +103,11 @@ int run_command(Command *runcommand, Command *outcommand)
 
         if (runcommand->bg)
         {
-            List_push(bg_jobs, runcommand);
+            // exit status should not be printed if command is backgrounded
+            list_push(bg_jobs, runcommand);
             printf(KGRN "Running in background: " RESET KCYNB "%s" RESET "\n", runcommand->cmd_str);
             // waitpid(pid, &status, WNOHANG);
-            return EXIT_SUCCESS;
+            return -1;
         }
         else
         {
@@ -167,7 +175,7 @@ int main(int argc, char *argv[])
     char prmpt[MAX_CMD_LEN];
     char buff[MAX_CMD_LEN];
     int status;
-    bg_jobs = List_create();
+    bg_jobs = list_init();
 
     generate_prompt(prmpt, sizeof(prmpt));
 
@@ -188,8 +196,9 @@ int main(int argc, char *argv[])
         Command *commands[(strlen(buff) + 1)];
         bzero(commands, sizeof(commands));
         unsigned int commandc = 0;
+        int bg = 0;
 
-        if (parse_line(buff, commands, &commandc))
+        if (parse_line(buff, commands, &commandc, &bg))
         {
             printf(KREDB "Syntax error" RESET "\n");
             continue;
@@ -197,10 +206,11 @@ int main(int argc, char *argv[])
 
         for (int i = 0; i < commandc; i++)
         {
+            // this is currently only status of last command, cringe
             if (i < (commandc - 1))
-                status = run_command(commands[i], commands[i + 1]);
+                status = run_command(commands[i], commands[i + 1], bg);
             else
-                status = run_command(commands[i], NULL);
+                status = run_command(commands[i], NULL, bg);
         }
 
         generate_prompt(prmpt, sizeof(prmpt));
@@ -215,19 +225,16 @@ int main(int argc, char *argv[])
             if (!(commands[i]->bg))
                 command_del(commands[i]);
         }
-
-        for (Node *current = (bg_jobs->head); current != NULL; current = current->next)
+        Node *current = bg_jobs->head;
+        while (current != NULL)
         {
-            printf("Hei: %s\n", ((current->cmd)->cmd_str));
             Command *job = current->cmd;
             int status;
             if (waitpid(job->pid, &status, WNOHANG) == 0)
             {
-                printf("Still alive: %s\n", ((current->cmd)->cmd_str));
+                current = current->next;
                 continue;
             }
-
-            printf("I'm dead: %s\n", ((current->cmd)->cmd_str));
 
             if (WIFEXITED(status))
             {
@@ -239,7 +246,9 @@ int main(int argc, char *argv[])
             else if (WIFSIGNALED(status))
                 printf(KREDB "Killed by signal: " RESET KCYNB "%s" RESET "\n", job->cmd_str);
 
-            List_remove(bg_jobs, job);
+            current = current->next;
+            list_remove(bg_jobs, job);
+            command_del(job);
         }
     }
     for (Node *current = (bg_jobs->head); current != NULL; current = current->next)
@@ -249,7 +258,7 @@ int main(int argc, char *argv[])
         kill(job->pid, SIGKILL);
         waitpid(job->pid, NULL, WNOHANG);
     }
-    List_del(bg_jobs);
+    list_del(bg_jobs);
     printf(RESET KGRN "exit" RESET "\n");
     exit(EXIT_SUCCESS);
 }

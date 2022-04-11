@@ -1,6 +1,6 @@
 #include "list.h"
 
-List *List_create()
+List *list_init()
 {
     List *list = (List *)malloc(sizeof(List));
     list->head = NULL;
@@ -8,7 +8,7 @@ List *List_create()
     return list;
 }
 
-List *List_push(List *list, Command *cmd)
+List *list_push(List *list, Command *cmd)
 {
     Node *node = (Node *)malloc(sizeof(Node));
     node->cmd = cmd;
@@ -27,7 +27,7 @@ List *List_push(List *list, Command *cmd)
     return list;
 }
 
-List *List_remove(List *list, Command *cmd)
+List *list_remove(List *list, Command *cmd)
 {
     Node *node = list->head;
     Node *prev = NULL;
@@ -48,7 +48,6 @@ List *List_remove(List *list, Command *cmd)
                     list->tail = prev;
             }
             // Maybe free the command?
-            command_del(cmd);
             free(node);
             return list;
         }
@@ -58,7 +57,7 @@ List *List_remove(List *list, Command *cmd)
     return list;
 }
 
-int List_del(List *list)
+int list_del(List *list)
 {
     Node *node = list->head;
     while (node != NULL)

@@ -23,9 +23,10 @@ int get_line(char *prmpt, char *buff, size_t sz);
  * 
  * @param command_str - Command string to parse
  * @param command - Command struct to populate
+ * @param bg - background flag
  * @return Status
  */
-int parse_command(char *command_str, Command *command);
+int parse_command(char *command_str, Command *command, int bg);
 
 /**
  * @brief parse a string into command structs
@@ -33,8 +34,9 @@ int parse_command(char *command_str, Command *command);
  * @param line - string to parse
  * @param commands - array of commands to populate
  * @param commandc - number of populated commands
+ * @param bg - whether to run in background
  * @return int - status
  */
-int parse_line(char *line, Command *commands[], unsigned int* commandc);
+int parse_line(char *line, Command *commands[], unsigned int *commandc, int *bg);
 
 #endif

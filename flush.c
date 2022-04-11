@@ -34,16 +34,19 @@ void sig_handler(int signo) {}
 
 int flush_cd(char **args, unsigned int argc);
 int flush_exit(char **args, unsigned int argc);
+int flush_jobs(char **args, unsigned int argc);
 
 char *builtin_str[] = {
     "cd",
     "exit",
     //"help",
+    "jobs",
 };
 
 int (*builtin_func[])(char **, unsigned int) = {
     &flush_cd,
     &flush_exit,
+    &flush_jobs,
 };
 
 size_t flush_num_builtins()
@@ -66,6 +69,22 @@ int flush_cd(char **args, unsigned int argc)
 int flush_exit(char **args, unsigned int argc)
 {
     exit(EXIT_SUCCESS);
+}
+
+int flush_jobs(char **args, unsigned int argc)
+{
+    if (list_length(bg_jobs) == 0)
+    {
+        printf(KWHT "No background jobs.\n" RESET);
+        return EXIT_SUCCESS;
+    }
+    printf(KWHT "Background jobs:\n" RESET);
+    Node *current = bg_jobs->head;
+    while (current != NULL)
+    {
+        printf(KWHT "PID: [%d] - [%s]\n" RESET, (current->cmd)->pid, (current->cmd)->cmd_str);
+        current = current->next;
+    }
 }
 
 void generate_prompt(char *prmpt, size_t sz)
@@ -225,6 +244,7 @@ int main(int argc, char *argv[])
             if (!(commands[i]->bg))
                 command_del(commands[i]);
         }
+
         Node *current = bg_jobs->head;
         while (current != NULL)
         {
@@ -251,6 +271,7 @@ int main(int argc, char *argv[])
             command_del(job);
         }
     }
+
     for (Node *current = (bg_jobs->head); current != NULL; current = current->next)
     {
         Command *job = current->cmd;
@@ -258,6 +279,7 @@ int main(int argc, char *argv[])
         kill(job->pid, SIGKILL);
         waitpid(job->pid, NULL, WNOHANG);
     }
+
     list_del(bg_jobs);
     printf(RESET KGRN "exit" RESET "\n");
     exit(EXIT_SUCCESS);

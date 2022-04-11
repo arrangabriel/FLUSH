@@ -15,6 +15,7 @@ typedef struct List
 {
     Node *head;
     Node *tail;
+    int len;
 } List;
 
 List *list_init();
@@ -30,5 +31,13 @@ int list_del(List *list);
 List *list_push(List *list, Command *cmd);
 
 List *list_remove(List *list, Command *cmd);
+
+/**
+ * @brief get length of list
+ * 
+ * @param list - list to get length of
+ * @return int - length of list
+ */
+int list_length(List *list);
 
 #endif

@@ -5,6 +5,7 @@ List *list_init()
     List *list = (List *)malloc(sizeof(List));
     list->head = NULL;
     list->tail = NULL;
+    list->len = 0;
     return list;
 }
 
@@ -24,6 +25,7 @@ List *list_push(List *list, Command *cmd)
         list->tail->next = node;
         list->tail = node;
     }
+    (list->len)++;
     return list;
 }
 
@@ -49,6 +51,7 @@ List *list_remove(List *list, Command *cmd)
             }
             // Maybe free the command?
             free(node);
+            (list->len)--;
             return list;
         }
         prev = node;
@@ -69,4 +72,9 @@ int list_del(List *list)
     }
     free(list);
     return 0;
+}
+
+int list_length(List *list)
+{
+    return list->len;
 }

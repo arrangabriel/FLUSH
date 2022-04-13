@@ -29,7 +29,10 @@ List *bg_jobs;
 
 extern int errno;
 
-void sig_handler(int signo) {}
+void sig_handler(int signo) {
+    // this probably has to pass the signal on to currently running processes
+    
+}
 
 int check_jobs();
 int flush_cd(char **args, unsigned int argc);
@@ -159,7 +162,6 @@ int run_command(Command *runcommand, Command *outcommand, int bg)
     if (pid)
     {
         close(runcommand->output_pipe);
-        close(runcommand->input_pipe);
         runcommand->pid = pid;
         int status;
 
@@ -171,10 +173,20 @@ int run_command(Command *runcommand, Command *outcommand, int bg)
         }
         else
         {
-            waitpid(pid, &status, 0);
-            if (WIFEXITED(status))
+            // TODO - do we need to fork inside child, now next process does not get to start
+            // In that case close output when parent is done
+            if (outcommand == NULL)
             {
-                return WEXITSTATUS(status);
+                waitpid(pid, &status, 0);
+                if (WIFEXITED(status))
+                {
+                    return WEXITSTATUS(status);
+                }
+            }
+            else
+            {
+                // this is silly, but an alright workaround to having children fork
+                return EXIT_SUCCESS;
             }
         }
     }

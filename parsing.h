@@ -2,10 +2,12 @@
 #define ____PARSING___H___
 
 #include <stddef.h>
+#include "command.h"
 
 #define OK 0
 #define NO_INPUT 1
 #define TOO_LONG 2
+
 /**
  * @brief Get a string from stdin with the given prompt
  *
@@ -15,14 +17,26 @@
  * @return Status
  */
 int get_line(char *prmpt, char *buff, size_t sz);
+
 /**
- * @brief Splits a string by spaces and tabs and places each token into args, NULL-terminated.
- *
- * @param line - String to be split.
- * @param sz - Size of string.
- * @param args - Reference to string array to be modified.
- * @return The number of elements in args.
+ * @brief Parse a command string into a Command struct
+ * 
+ * @param command_str - Command string to parse
+ * @param command - Command struct to populate
+ * @param bg - background flag
+ * @return Status
  */
-unsigned int parse_line(char *line, size_t sz, char ***args, const char delim[]);
+int parse_command(char *command_str, Command *command, int bg);
+
+/**
+ * @brief parse a string into command structs
+ * 
+ * @param line - string to parse
+ * @param commands - array of commands to populate
+ * @param commandc - number of populated commands
+ * @param bg - whether to run in background
+ * @return int - status
+ */
+int parse_line(char *line, Command *commands[], unsigned int *commandc, int *bg);
 
 #endif

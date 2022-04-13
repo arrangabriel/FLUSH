@@ -112,7 +112,6 @@ int parse_line(char *line, Command *commands[], unsigned int *commandc, int *bg)
     // fix segfault on single command with pipe, or single pipe only
     while ((command_str = strsep(&line, "|")) != NULL)
     {
-
         Command *command = command_init(strlen(command_str));
         if (parse_command(command_str, command, *bg))
         {
@@ -121,6 +120,9 @@ int parse_line(char *line, Command *commands[], unsigned int *commandc, int *bg)
                 command_del(commands[i]);
             return EXIT_FAILURE;
         }
+        printf("%s\n", command->cmd_str);
+        for (int i = 0; i < command->argc; i++)
+            printf("%s\n", command->args[i]);
         commands[(*commandc)++] = command;
     }
     return EXIT_SUCCESS;

@@ -33,12 +33,32 @@ int get_line(char *prmpt, char *buff, size_t sz)
     return OK;
 }
 
+char *trimwhitespace(char *str)
+{
+    char *end;
+
+    while (isspace((unsigned char)*str))
+        str++;
+
+    if (*str == 0)
+        return str;
+
+    end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char)*end))
+        end--;
+
+    end[1] = '\0';
+
+    return str;
+}
+
 int parse_command(char *command_str, Command *command, int bg)
 {
     // TODO - investigate bug when parsing with spaces in quotes
     char *arg;
     char **space_sep = (char **)malloc(((strlen(command_str) / 2) + 1) * sizeof(char *));
 
+    command_str = trimwhitespace(command_str);
     (command->cmd_str) = (char *)malloc(strlen(command_str) * sizeof(char));
     strcpy(command->cmd_str, command_str);
     command->bg = bg;
@@ -92,6 +112,7 @@ int parse_line(char *line, Command *commands[], unsigned int *commandc, int *bg)
     // fix segfault on single command with pipe, or single pipe only
     while ((command_str = strsep(&line, "|")) != NULL)
     {
+
         Command *command = command_init(strlen(command_str));
         if (parse_command(command_str, command, *bg))
         {

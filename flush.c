@@ -72,6 +72,7 @@ int flush_exit(char **args, unsigned int argc)
 
 int flush_jobs(char **args, unsigned int argc)
 {
+    // TODO - delete finished jobs
     if (list_length(bg_jobs) == 0)
     {
         printf(KWHT "No background jobs.\n" RESET);
@@ -124,8 +125,7 @@ int run_command(Command *runcommand, Command *outcommand, int bg)
             // exit status should not be printed if command is backgrounded
             list_push(bg_jobs, runcommand);
             printf(KGRN "Running in background: " RESET KCYNB "%s" RESET "\n", runcommand->cmd_str);
-            // waitpid(pid, &status, WNOHANG);
-            return -1;
+            return EXIT_SUCCESS;
         }
         else
         {
@@ -179,6 +179,7 @@ int run_command(Command *runcommand, Command *outcommand, int bg)
         printf(KREDB "Permission denied" RESET "\n");
         break;
     case ENOENT:
+
         printf(KREDB "Command not found" RESET "\n");
         break;
     default:
@@ -229,19 +230,24 @@ int main(int argc, char *argv[])
                 status = run_command(commands[i], commands[i + 1], bg);
             else
                 status = run_command(commands[i], NULL, bg);
+            if (status > 0)
+                break;
         }
 
         generate_prompt(prmpt, sizeof(prmpt));
 
-        char *status_color = (status) ? RESET KREDB : RESET KGRN;
-        printf(RESET KYEL "Exit status " RESET KCYNB "[");
-        for (int i = 0; i < commandc; i++)
-            printf("%s", commands[i]->cmd_str);
-        printf("]%s = %i\n" RESET, status_color, status);
-
-        for (int i = 0; i < commandc; i++) {
-            if (!(commands[i]->bg))
+        if (!bg)
+        {
+            char *status_color = (status) ? RESET KREDB : RESET KGRN;
+            printf(RESET KYEL "Exit status " RESET KCYNB "[");
+            for (int i = 0; i < commandc; i++)
+            {
+                printf("%s", commands[i]->cmd_str);
+                if (i < commandc - 1)
+                    printf(" | ");
                 command_del(commands[i]);
+            }
+            printf("]%s = %i\n" RESET, status_color, status);
         }
 
         Node *current = bg_jobs->head;
@@ -255,15 +261,10 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            if (WIFEXITED(status))
-            {
-                if (WEXITSTATUS(status) == EXIT_SUCCESS)
-                    printf(KGRN "Success: " RESET KCYNB "%s" RESET "\n", job->cmd_str);
-                else
-                    printf(KREDB "Failure: " RESET KCYNB "%s" RESET "\n", job->cmd_str);
-            }
-            else if (WIFSIGNALED(status))
-                printf(KREDB "Killed by signal: " RESET KCYNB "%s" RESET "\n", job->cmd_str);
+            char *status_color = (status) ? RESET KREDB : RESET KGRN;
+            printf(RESET KYEL "Exit status " RESET KCYNB "[");
+            printf("%s", job->cmd_str);
+            printf("]%s = %i\n" RESET, status_color, status);
 
             current = current->next;
             list_remove(bg_jobs, job);

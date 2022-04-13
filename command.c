@@ -8,6 +8,8 @@ Command *command_init(size_t len)
     cmd->cmd_str = (char *)malloc(sizeof(char*));
     cmd->output_redirect = "";
     cmd->input_redirect = "";
+    cmd->input_pipe = -1; 
+    cmd->output_pipe = -1;
     cmd->pid = 0;
     cmd->bg = 0;
     return cmd;

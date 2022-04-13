@@ -31,6 +31,7 @@ extern int errno;
 
 void sig_handler(int signo) {}
 
+int check_jobs();
 int flush_cd(char **args, unsigned int argc);
 int flush_exit(char **args, unsigned int argc);
 int flush_jobs(char **args, unsigned int argc);
@@ -72,7 +73,9 @@ int flush_exit(char **args, unsigned int argc)
 
 int flush_jobs(char **args, unsigned int argc)
 {
-    // TODO - delete finished jobs
+    // Do this to remedy showing finished jobs
+    check_jobs();
+
     if (list_length(bg_jobs) == 0)
     {
         printf(KWHT "No background jobs.\n" RESET);
@@ -98,6 +101,31 @@ void generate_prompt(char *prmpt, size_t sz)
     strcat(prmpt, end);
 }
 
+int check_jobs()
+{
+    Node *current = bg_jobs->head;
+    while (current != NULL)
+    {
+        Command *job = current->cmd;
+        int status;
+        if (waitpid(job->pid, &status, WNOHANG) == 0)
+        {
+            current = current->next;
+            continue;
+        }
+
+        char *status_color = (status) ? RESET KREDB : RESET KGRN;
+        printf(RESET KYEL "Exit status " RESET KCYNB "[");
+        printf("%s", job->cmd_str);
+        printf("]%s = %i\n" RESET, status_color, status);
+
+        current = current->next;
+        list_remove(bg_jobs, job);
+        command_del(job);
+    }
+    return 0;
+}
+
 /**
  * @brief runs a command structure
  *
@@ -113,61 +141,79 @@ int run_command(Command *runcommand, Command *outcommand, int bg)
             return (*builtin_func[i])(runcommand->args, runcommand->argc);
     }
 
+    if (outcommand != NULL)
+    {
+        // Do piping
+        int pipefd[2];
+        if (pipe(pipefd) == -1)
+        {
+            perror("Pipe failed");
+            return EXIT_FAILURE;
+        }
+        runcommand->output_pipe = pipefd[1];
+        outcommand->input_pipe = pipefd[0];
+    }
+
     int pid = fork();
 
     if (pid)
     {
+        close(runcommand->output_pipe);
+        close(runcommand->input_pipe);
         runcommand->pid = pid;
         int status;
 
         if (runcommand->bg)
         {
-            // exit status should not be printed if command is backgrounded
             list_push(bg_jobs, runcommand);
-            printf(KGRN "Running in background: " RESET KCYNB "%s" RESET "\n", runcommand->cmd_str);
+            printf(RESET KCYNB "[%s]" RESET " - %i\n", runcommand->cmd_str, runcommand->pid);
             return EXIT_SUCCESS;
         }
         else
         {
             waitpid(pid, &status, 0);
             if (WIFEXITED(status))
+            {
                 return WEXITSTATUS(status);
+            }
         }
     }
 
+    // In child process
     int std_out = dup(1);
-    // In child
-    if (strcmp(runcommand->input_redirect, "") != 0)
+
+    int input_fd = 0;
+    int output_fd = 1;
+
+    if (runcommand->input_pipe > 0)
     {
-        int fd;
-        if ((fd = open(runcommand->input_redirect, O_RDONLY)) < 0)
+        input_fd = runcommand->input_pipe;
+    }
+    else if (strcmp(runcommand->input_redirect, "") != 0)
+    {
+        if ((input_fd = open(runcommand->input_redirect, O_RDONLY)) < 0)
         {
             // Not exhaustive error handling
             printf(KYEL "Input file: " KCYNB "%s" RESET KYEL " not found\n" RESET, runcommand->input_redirect);
             exit(EXIT_FAILURE);
         }
-        dup2(fd, 0);
     }
+    dup2(input_fd, 0);
 
-    if (strcmp(runcommand->output_redirect, "") != 0)
+    if (runcommand->output_pipe > 0)
     {
-        int fd;
-        if ((fd = open(runcommand->output_redirect, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU)) < 0)
+        output_fd = runcommand->output_pipe;
+    }
+    else if (strcmp(runcommand->output_redirect, "") != 0)
+    {
+        if ((output_fd = open(runcommand->output_redirect, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU)) < 0)
         {
             // Not exhaustive error handling
             printf(KYEL "Output file: " KCYNB "%s" RESET KYEL " could not be created\n" RESET, runcommand->output_redirect);
             exit(EXIT_FAILURE);
         }
-        dup2(fd, 1);
     }
-
-    // piping setup
-    if (outcommand == NULL)
-    {
-    }
-    else
-    {
-    }
+    dup2(output_fd, 1);
 
     execvp((runcommand->args)[0], &(runcommand->args)[0]);
 
@@ -179,7 +225,6 @@ int run_command(Command *runcommand, Command *outcommand, int bg)
         printf(KREDB "Permission denied" RESET "\n");
         break;
     case ENOENT:
-
         printf(KREDB "Command not found" RESET "\n");
         break;
     default:
@@ -209,7 +254,7 @@ int main(int argc, char *argv[])
             printf(KYEL "Command too long\n" RESET);
             continue;
         }
-        else if (status == NO_INPUT)
+        else if (strlen(buff) == 0)
             continue;
 
         Command *commands[(strlen(buff) + 1)];
@@ -250,26 +295,7 @@ int main(int argc, char *argv[])
             printf("]%s = %i\n" RESET, status_color, status);
         }
 
-        Node *current = bg_jobs->head;
-        while (current != NULL)
-        {
-            Command *job = current->cmd;
-            int status;
-            if (waitpid(job->pid, &status, WNOHANG) == 0)
-            {
-                current = current->next;
-                continue;
-            }
-
-            char *status_color = (status) ? RESET KREDB : RESET KGRN;
-            printf(RESET KYEL "Exit status " RESET KCYNB "[");
-            printf("%s", job->cmd_str);
-            printf("]%s = %i\n" RESET, status_color, status);
-
-            current = current->next;
-            list_remove(bg_jobs, job);
-            command_del(job);
-        }
+        check_jobs();
     }
 
     for (Node *current = (bg_jobs->head); current != NULL; current = current->next)

@@ -11,6 +11,8 @@ typedef struct Command
     unsigned int argc;
     char *input_redirect;
     char *output_redirect;
+    int input_pipe;
+    int output_pipe;
     int bg;
     pid_t pid;
 } Command;

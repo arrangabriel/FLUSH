@@ -68,7 +68,6 @@ int parse_command(char *command_str, Command *command, int bg)
     {
         if (strcmp(arg, "") != 0)
         {
-            printf("%i\n", i);
             space_sep[i] = arg;
             i++;
         }
@@ -91,7 +90,8 @@ int parse_command(char *command_str, Command *command, int bg)
         else
             command->args[(command->argc)++] = space_sep[j];
     }
-    command->args[(command->argc) + 1] = NULL;
+    printf("%i\n", command->argc);
+    command->args[(command->argc)] = NULL;
     return EXIT_SUCCESS;
 }
 

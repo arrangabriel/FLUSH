@@ -90,7 +90,6 @@ int parse_command(char *command_str, Command *command, int bg)
         else
             command->args[(command->argc)++] = space_sep[j];
     }
-    printf("%i\n", command->argc);
     command->args[(command->argc)] = NULL;
     return EXIT_SUCCESS;
 }

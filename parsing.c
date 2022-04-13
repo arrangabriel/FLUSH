@@ -56,7 +56,8 @@ int parse_command(char *command_str, Command *command, int bg)
 {
     // TODO - investigate bug when parsing with spaces in quotes
     char *arg;
-    char **space_sep = (char **)malloc(((strlen(command_str) / 2) + 1) * sizeof(char *));
+    // char **space_sep = (char **)malloc(((strlen(command_str) / 2) + 1) * sizeof(char *));
+    char *space_sep[(strlen(command_str) / 2) + 1];
 
     command_str = trimwhitespace(command_str);
     (command->cmd_str) = (char *)malloc(strlen(command_str) * sizeof(char));
@@ -90,6 +91,7 @@ int parse_command(char *command_str, Command *command, int bg)
         else
             command->args[(command->argc)++] = space_sep[j];
     }
+    // free(space_sep);
     command->args[(command->argc) + 1] = NULL;
     return EXIT_SUCCESS;
 }
@@ -127,3 +129,4 @@ int parse_line(char *line, Command *commands[], unsigned int *commandc, int *bg)
     }
     return EXIT_SUCCESS;
 }
+

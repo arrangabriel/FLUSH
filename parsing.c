@@ -68,6 +68,7 @@ int parse_command(char *command_str, Command *command, int bg)
     {
         if (strcmp(arg, "") != 0)
         {
+            printf("%i\n", i);
             space_sep[i] = arg;
             i++;
         }
@@ -120,9 +121,6 @@ int parse_line(char *line, Command *commands[], unsigned int *commandc, int *bg)
                 command_del(commands[i]);
             return EXIT_FAILURE;
         }
-        printf("%s\n", command->cmd_str);
-        for (int i = 0; i < command->argc; i++)
-            printf("%s\n", command->args[i]);
         commands[(*commandc)++] = command;
     }
     return EXIT_SUCCESS;

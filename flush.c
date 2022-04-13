@@ -16,7 +16,6 @@
 #include <errno.h>
 
 #define MAX_CMD_LEN 1024
-#define TEMP "/tmp/flush_out"
 
 #define RESET "\x1B[0m"
 #define KREDB "\x1B[31;1m"

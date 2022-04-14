@@ -16,6 +16,7 @@
 #include <errno.h>
 
 #define MAX_CMD_LEN 1024
+#define MAX_PRMPT_LEN PATH_MAX + (2 * sizeof(char))
 
 #define RESET "\x1B[0m"
 #define KREDB "\x1B[31;1m"
@@ -30,8 +31,7 @@ List *bg_jobs;
 extern int errno;
 
 void sig_handler(int signo) {
-    // this probably has to pass the signal on to currently running processes
-    
+    // Not sure if this should do something, other than catch the signal
 }
 
 int check_jobs();
@@ -42,7 +42,6 @@ int flush_jobs(char **args, unsigned int argc);
 char *builtin_str[] = {
     "cd",
     "exit",
-    //"help",
     "jobs",
 };
 
@@ -129,6 +128,38 @@ int check_jobs()
     return 0;
 }
 
+int get_io(Command *cmd, int *input_fd, int *output_fd)
+{
+    if (cmd->input_pipe > 0)
+    {
+        *input_fd = cmd->input_pipe;
+    }
+    else if (strcmp(cmd->input_redirect, "") != 0)
+    {
+        if ((*input_fd = open(cmd->input_redirect, O_RDONLY)) < 0)
+        {
+            printf(KYEL "Input file: " RESET KCYNB "%s" RESET KYEL " not found\n", cmd->input_redirect);
+            return EXIT_FAILURE;
+        }
+    }
+
+    if (cmd->output_pipe > 0)
+    {
+        *output_fd = cmd->output_pipe;
+    }
+    else if (strcmp(cmd->output_redirect, "") != 0)
+    {
+        if ((*output_fd = open(cmd->output_redirect, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU)) < 0)
+        {
+            // Not exhaustive error handling
+            printf(KYEL "Output file: " KCYNB "%s" RESET KYEL " could not be created\n" RESET, cmd->output_redirect);
+            return (EXIT_FAILURE);
+        }
+    }
+
+    return EXIT_SUCCESS;
+}
+
 /**
  * @brief runs a command structure
  *
@@ -146,13 +177,10 @@ int run_command(Command *runcommand, Command *outcommand, int bg)
 
     if (outcommand != NULL)
     {
-        // Do piping
         int pipefd[2];
         if (pipe(pipefd) == -1)
-        {
-            perror("Pipe failed");
             return EXIT_FAILURE;
-        }
+
         runcommand->output_pipe = pipefd[1];
         outcommand->input_pipe = pipefd[0];
     }
@@ -169,26 +197,18 @@ int run_command(Command *runcommand, Command *outcommand, int bg)
         {
             list_push(bg_jobs, runcommand);
             printf(RESET KCYNB "[%s]" RESET " - %i\n", runcommand->cmd_str, runcommand->pid);
-            return EXIT_SUCCESS;
         }
-        else
+        else if (outcommand == NULL)
         {
-            // TODO - do we need to fork inside child, now next process does not get to start
-            // In that case close output when parent is done
-            if (outcommand == NULL)
-            {
-                waitpid(pid, &status, 0);
-                if (WIFEXITED(status))
-                {
-                    return WEXITSTATUS(status);
-                }
-            }
-            else
-            {
-                // this is silly, but an alright workaround to having children fork
-                return EXIT_SUCCESS;
-            }
+            // Checking for next command creates a pseudo background job of current command
+            // waitpid errors when the process is not running, but I don't think it matters
+            waitpid(pid, &status, 0);
+            if (WIFEXITED(status))
+                return WEXITSTATUS(status);
         }
+        // We do not save state of intermittend commands, but this allows main loop to continue executing
+        // Another option is to check state of each command after the final one has finished executing.
+        return EXIT_SUCCESS;
     }
 
     // In child process
@@ -197,38 +217,43 @@ int run_command(Command *runcommand, Command *outcommand, int bg)
     int input_fd = 0;
     int output_fd = 1;
 
-    if (runcommand->input_pipe > 0)
-    {
-        input_fd = runcommand->input_pipe;
-    }
-    else if (strcmp(runcommand->input_redirect, "") != 0)
-    {
-        if ((input_fd = open(runcommand->input_redirect, O_RDONLY)) < 0)
-        {
-            // Not exhaustive error handling
-            printf(KYEL "Input file: " KCYNB "%s" RESET KYEL " not found\n" RESET, runcommand->input_redirect);
-            exit(EXIT_FAILURE);
-        }
-    }
+    // refactor these to a function?
+    if (get_io(runcommand, &input_fd, &output_fd))
+        exit(EXIT_FAILURE);
+
+    // if (runcommand->input_pipe > 0)
+    // {
+    //     input_fd = runcommand->input_pipe;
+    // }
+    // else if (strcmp(runcommand->input_redirect, "") != 0)
+    // {
+    //     if ((input_fd = open(runcommand->input_redirect, O_RDONLY)) < 0)
+    //     {
+    //         // Not exhaustive error handling
+    //         printf(KYEL "Input file: " KCYNB "%s" RESET KYEL " not found\n" RESET, runcommand->input_redirect);
+    //         exit(EXIT_FAILURE);
+    //     }
+    // }
     dup2(input_fd, 0);
 
-    if (runcommand->output_pipe > 0)
-    {
-        output_fd = runcommand->output_pipe;
-    }
-    else if (strcmp(runcommand->output_redirect, "") != 0)
-    {
-        if ((output_fd = open(runcommand->output_redirect, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU)) < 0)
-        {
-            // Not exhaustive error handling
-            printf(KYEL "Output file: " KCYNB "%s" RESET KYEL " could not be created\n" RESET, runcommand->output_redirect);
-            exit(EXIT_FAILURE);
-        }
-    }
+    // if (runcommand->output_pipe > 0)
+    // {
+    //     output_fd = runcommand->output_pipe;
+    // }
+    // else if (strcmp(runcommand->output_redirect, "") != 0)
+    // {
+    //     if ((output_fd = open(runcommand->output_redirect, O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU)) < 0)
+    //     {
+    //         // Not exhaustive error handling
+    //         printf(KYEL "Output file: " KCYNB "%s" RESET KYEL " could not be created\n" RESET, runcommand->output_redirect);
+    //         exit(EXIT_FAILURE);
+    //     }
+    // }
     dup2(output_fd, 1);
 
     execvp((runcommand->args)[0], &(runcommand->args)[0]);
 
+    // If exec failed
     dup2(std_out, 1);
 
     switch (errno)
@@ -248,7 +273,7 @@ int run_command(Command *runcommand, Command *outcommand, int bg)
 
 int main(int argc, char *argv[])
 {
-    char prmpt[MAX_CMD_LEN];
+    char prmpt[MAX_PRMPT_LEN];
     char buff[MAX_CMD_LEN];
     int status;
     bg_jobs = list_init();
@@ -258,7 +283,6 @@ int main(int argc, char *argv[])
     if (signal(SIGINT, sig_handler) == SIG_ERR)
         printf("\ncan't catch SIGINT\n");
 
-    // TODO - look into prompt printing before background job
     while ((status = get_line(prmpt, buff, sizeof(buff))) != NO_INPUT)
     {
         if (status == TOO_LONG)

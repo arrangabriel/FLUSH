@@ -17,8 +17,20 @@ typedef struct Command
     pid_t pid;
 } Command;
 
+/**
+ * @brief Initialize a Command struct
+ *
+ * @param len Length of the command string
+ * @return Command* Pointer to the initialized Command struct
+ */
 Command *command_init(size_t len);
 
+/**
+ * @brief Free a Command struct
+ *
+ * @param cmd Command struct to free
+ * @return Status
+ */
 int command_del(Command *cmd);
 
 #endif

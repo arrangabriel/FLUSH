@@ -18,28 +18,28 @@
 #define KWHT "\x1B[37m"
 
 /**
- * @brief generates a prompt string
+ * @brief Generates a prompt string
  *
- * @param prmpt the string to be populated
- * @param sz the size of prmpt
+ * @param prmpt The string to be populated
+ * @param sz The size of prmpt
  */
 void generate_prompt(char *prmpt, size_t sz);
 
 /**
- * @brief checks for finished background jobs, and removes them from the list
+ * @brief Checks for finished background jobs, and removes them from the list
  *
- * @return EXIT_SUCCESS on success, EXIT_FAILIURE on failure
+ * @return Status 
  */
 int refresh_jobs(List *jobs);
 
 /**
- * @brief get io filedescriptors from command
+ * @brief Get io filedescriptors from command
  *
- * @param cmd the command to get from
- * @param input_fd the input file descriptor
- * @param output_fd the output file descriptor
+ * @param cmd The command struct to get from
+ * @param input_fd The input file descriptor
+ * @param output_fd The output file descriptor
  *
- * @return EXIT_SUCCESS on success, EXIT_FAILIURE on failure
+ * @return Status
  */
 int get_io(Command *cmd, int *input_fd, int *output_fd);
 

@@ -9,7 +9,7 @@ List *list_init()
     return list;
 }
 
-List *list_push(List *list, Command *cmd)
+int *list_push(List *list, Command *cmd)
 {
     Node *node = (Node *)malloc(sizeof(Node));
     node->cmd = cmd;
@@ -26,10 +26,10 @@ List *list_push(List *list, Command *cmd)
         list->tail = node;
     }
     (list->len)++;
-    return list;
+    return EXIT_SUCCESS;
 }
 
-List *list_remove(List *list, Command *cmd)
+int *list_remove(List *list, Command *cmd)
 {
     Node *node = list->head;
     Node *prev = NULL;
@@ -52,12 +52,12 @@ List *list_remove(List *list, Command *cmd)
             // Maybe free the command?
             free(node);
             (list->len)--;
-            return list;
+            return EXIT_SUCCESS;
         }
         prev = node;
         node = node->next;
     }
-    return list;
+    return EXIT_SUCCESS;
 }
 
 int list_del(List *list)
@@ -71,7 +71,7 @@ int list_del(List *list)
         node = list->head;
     }
     free(list);
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int list_length(List *list)

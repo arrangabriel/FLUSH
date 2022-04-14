@@ -3,14 +3,12 @@
 
 #include "command.h"
 
-// define linked list
 typedef struct Node
 {
     Command *cmd;
     struct Node *next;
 } Node;
 
-// define linked list
 typedef struct List
 {
     Node *head;
@@ -18,25 +16,46 @@ typedef struct List
     int len;
 } List;
 
+/**
+ * @brief Creates a new empty list struct.
+ *
+ * @return A pointer to the new list.
+ */
 List *list_init();
 
 /**
- * @brief delete list, !warning! frees commands
- * 
- * @param list - list to delete
- * @return int - status
+ * @brief Delete list, !warning! frees commands
+ *
+ * @param list List to delete
+ * @return Status
  */
 int list_del(List *list);
 
-List *list_push(List *list, Command *cmd);
-
-List *list_remove(List *list, Command *cmd);
+/**
+ * @brief Add a command to the end of the list.
+ *
+ * @param list List to add to
+ * @param cmd Command to add
+ *
+ * @return Status
+ */
+int *list_push(List *list, Command *cmd);
 
 /**
- * @brief get length of list
- * 
- * @param list - list to get length of
- * @return int - length of list
+ * @brief Remove a command from the list.
+ *
+ * @param list List to remove from
+ * @param cmd Command to remove
+ *
+ * @return Status
+ */
+int *list_remove(List *list, Command *cmd);
+
+/**
+ * @brief Get length of list
+ *
+ * @param list List to get length of
+ * @return int Length of list
  */
 int list_length(List *list);
 

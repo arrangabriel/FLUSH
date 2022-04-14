@@ -70,7 +70,7 @@ int flush_jobs(char **args, unsigned int argc)
     Node *current = bg_jobs->head;
     while (current != NULL)
     {
-        printf(KWHT "PID: [%d] - [%s]\n" RESET, (current->cmd)->pid, (current->cmd)->cmd_str);
+        printf(KCYNB "[%s]" RESET KWHT " - %d\n" RESET, (current->cmd)->cmd_str, (current->cmd)->pid);
         current = current->next;
     }
 }

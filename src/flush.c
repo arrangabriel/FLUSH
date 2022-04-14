@@ -22,7 +22,7 @@ int flush_jobs(char **args, unsigned int argc);
 
 char *builtin_str[] = {
     "cd",
-    "exit",
+    "exit", // TODO, this needs to kill children
     "jobs",
 };
 

@@ -1,5 +1,5 @@
-flush: command.c list.c parsing.c flush.c
-	gcc -o flush.o command.c list.c parsing.c flush.c -I.
+flush:
+	cd src && gcc -o flush.o command.c list.c parsing.c utils.c flush.c -I. && mv flush.o ../
 
-flush_gdb: command.c list.c parsing.c flush.c
-	gcc -o flush.o command.c list.c parsing.c flush.c -g -I.
+flush_gdb:
+	cd src && gcc -o flush.o command.c list.c parsing.c utils.c flush.c -g -I. && mv flush.o ../

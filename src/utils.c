@@ -24,6 +24,7 @@ int refresh_jobs(List *jobs)
             continue;
         }
 
+        // Each finished job gets its own line, should maye be combined for a piped command
         char *status_color = (status) ? RESET KREDB : RESET KGRN;
         printf(RESET KYEL "Exit status " RESET KCYNB "[");
         printf("%s", job->cmd_str);

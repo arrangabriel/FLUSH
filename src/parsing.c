@@ -1,6 +1,26 @@
 #include "parsing.h"
 #include "command.h"
 
+// utility to remove whitespace from string
+char *trimwhitespace(char *str)
+{
+    char *end;
+
+    while (isspace((unsigned char)*str))
+        str++;
+
+    if (*str == 0)
+        return str;
+
+    end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char)*end))
+        end--;
+
+    end[1] = '\0';
+
+    return str;
+}
+
 int get_line(char *prmpt, char *buff, size_t sz)
 {
     int ch, extra;
@@ -27,25 +47,6 @@ int get_line(char *prmpt, char *buff, size_t sz)
     // Otherwise remove newline and give string back to caller.
     buff[strlen(buff) - 1] = '\0';
     return OK;
-}
-
-char *trimwhitespace(char *str)
-{
-    char *end;
-
-    while (isspace((unsigned char)*str))
-        str++;
-
-    if (*str == 0)
-        return str;
-
-    end = str + strlen(str) - 1;
-    while (end > str && isspace((unsigned char)*end))
-        end--;
-
-    end[1] = '\0';
-
-    return str;
 }
 
 int parse_command(char *command_str, Command *command, int bg)
@@ -120,4 +121,3 @@ int parse_line(char *line, Command *commands[], unsigned int *commandc, int *bg)
     }
     return EXIT_SUCCESS;
 }
-

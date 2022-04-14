@@ -33,4 +33,13 @@ Command *command_init(size_t len);
  */
 int command_del(Command *cmd);
 
+/**
+ * @brief Print a list of commands
+ *
+ * @param commands List of commands to print
+ * @param commandc Number of commands in the list
+ * @param status Exit status of command list
+ */
+void print_commands(Command *commands[], int commandc, int status);
+
 #endif

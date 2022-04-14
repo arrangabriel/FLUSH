@@ -198,6 +198,7 @@ int main(int argc, char *argv[])
                 status = run_command(commands[i], commands[i + 1], bg);
             else
                 status = run_command(commands[i], NULL, bg);
+            
             if (status > 0)
                 break;
         }
@@ -206,16 +207,9 @@ int main(int argc, char *argv[])
 
         if (!bg)
         {
-            char *status_color = (status) ? RESET KREDB : RESET KGRN;
-            printf(RESET KYEL "Exit status " RESET KCYNB "[");
+            print_commands(commands, commandc, status);
             for (int i = 0; i < commandc; i++)
-            {
-                printf("%s", commands[i]->cmd_str);
-                if (i < commandc - 1)
-                    printf(" | ");
                 command_del(commands[i]);
-            }
-            printf("]%s = %i\n" RESET, status_color, status);
         }
 
         refresh_jobs(bg_jobs);
@@ -224,7 +218,6 @@ int main(int argc, char *argv[])
     for (Node *current = (bg_jobs->head); current != NULL; current = current->next)
     {
         Command *job = current->cmd;
-        printf("%i\n", job->pid);
         kill(job->pid, SIGKILL);
         waitpid(job->pid, NULL, WNOHANG);
     }

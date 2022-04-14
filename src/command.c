@@ -1,4 +1,5 @@
 #include "command.h"
+#include "utils.h"
 
 Command *command_init(size_t len)
 {
@@ -22,4 +23,17 @@ int command_del(Command *cmd)
     free(cmd);
     // Error handling?
     return 0;
+}
+
+void print_commands(Command *commands[], int commandc, int status)
+{
+    char *status_color = (status) ? RESET KREDB : RESET KGRN;
+    printf(RESET KYEL "Exit status " RESET KCYNB "[");
+    for (int i = 0; i < commandc; i++)
+    {
+        printf("%s", commands[i]->cmd_str);
+        if (i < commandc - 1)
+            printf(" | ");
+    }
+    printf("]%s = %i\n" RESET, status_color, status);
 }

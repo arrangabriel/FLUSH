@@ -76,11 +76,11 @@ int flush_jobs(char **args, unsigned int argc)
 }
 
 /**
- * @brief runs a command structure
+ * @brief Runs a command structure
  *
- * @param runcommand the command to run
- * @param outcommand the command to run if the command is a pipe
- * @return int EXIT_SUCCESS on success, EXIT_FAILURE on failure, -1 if command was backgrounded
+ * @param runcommand The command to run
+ * @param outcommand The command to run if the command is a pipe
+ * @return Status
  */
 int run_command(Command *runcommand, Command *outcommand, int bg)
 {
@@ -170,6 +170,7 @@ int main(int argc, char *argv[])
     if (signal(SIGINT, sig_handler) == SIG_ERR)
         printf("\ncan't catch SIGINT\n");
 
+    // Main loop
     while ((status = get_line(prmpt, buff, sizeof(buff))) != NO_INPUT)
     {
         if (status == TOO_LONG)
@@ -181,7 +182,7 @@ int main(int argc, char *argv[])
             continue;
 
         Command *commands[(strlen(buff) + 1)];
-        bzero(commands, sizeof(commands));
+        memset(commands, 0, sizeof(commands));
         unsigned int commandc = 0;
         int bg = 0;
 

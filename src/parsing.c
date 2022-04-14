@@ -21,6 +21,18 @@ char *trimwhitespace(char *str)
     return str;
 }
 
+// utility to check if string is whitespace
+int isempty(const char *s)
+{
+    while (*s)
+    {
+        if (!isspace(*s))
+            return 0;
+        s++;
+    }
+    return 1;
+}
+
 int get_line(char *prmpt, char *buff, size_t sz)
 {
     int ch, extra;
@@ -109,6 +121,9 @@ int parse_line(char *line, Command *commands[], unsigned int *commandc, int *bg)
     // fix segfault on single command with pipe, or single pipe only
     while ((command_str = strsep(&line, "|")) != NULL)
     {
+        if (strcmp(command_str, "") == 0 || isempty(command_str))
+            return EXIT_FAILURE;
+
         Command *command = command_init(strlen(command_str));
         if (parse_command(command_str, command, *bg))
         {

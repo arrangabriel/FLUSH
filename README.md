@@ -12,7 +12,7 @@ Then run the binary `flush.o`.
 
 ### Running programs by absolute path or PATH search
 ```
-These lines exibit the same behaviour
+These lines exhibit the same behaviour
 
 $ /usr/bin/ls
 
@@ -26,11 +26,11 @@ $ ls
 ```
 ### Exit the shell
 ```
-These lines exibit the same behaviour
+These lines exhibit the same behaviour
 
 $ exit
 
-$ ^D
+$ ^d
 ```
 ### IO-redirection
 ```
